@@ -23,8 +23,8 @@ public class Main extends JComponent implements Runnable {
     private void timeStep() {
         time += 0.05;
 
-        if (wave.size() > 200){
-            wave.remove(0);
+        if (wave.size() > 500){
+            wave.remove(wave.size()-1);
         }
     }
 
@@ -34,33 +34,51 @@ public class Main extends JComponent implements Runnable {
         g2.setBackground(new Color(0, 0, 0));
 
         g2.translate(200, 200);
+        double x = 0;
+        double y = 0;
+        double radius;
 
-        double radius = 50;
-        Ellipse2D ellipse2D = new Ellipse2D.Double(0 - radius, 0 - radius, radius * 2, radius * 2);
-        g2.draw(ellipse2D);
+        for (int i=0;i<20;i+= 2){
+            radius = 100/(i+1);
+            drawCenteredCircle(g2,x,y,radius);
 
-        double x = radius * Math.cos(time);
-        double y = radius * Math.sin(time);
+            x = radius/2 * (Math.cos(time*(i+1)) + 0) + x;
+            y = radius/2 * (Math.sin(time*(i+1)) + 0) + y;
 
-        wave.add(new Point2D.Double(x, y));
+        }
 
-        Ellipse2D point = new Ellipse2D.Double(
-                ((Ellipse2D.Double) ellipse2D).x + x + radius,
-                ((Ellipse2D.Double) ellipse2D).y + y + radius,
-                5, 5);
-        g2.fill(point);
+        wave.add(0,new Point2D.Double(x, y));
+
+
+        drawPoint(g2,x,y);
 
         Path2D path2D = new Path2D.Float();
-        path2D.moveTo(100, wave.get(0).getY());
+        path2D.moveTo(200, wave.get(0).getY());
         int index=0;
         for (Point2D temp : wave) {
-            path2D.lineTo(index+100,temp.getY());
+            path2D.lineTo(index+200,temp.getY());
             index++;
         }
 
         g2.draw(path2D);
 
 
+    }
+
+    private void drawPoint(Graphics2D g2, double x, double y) {
+        double r = 4;
+        x = x-(r/2);
+        y = y-(r/2);
+        Ellipse2D ellipse2D = new Ellipse2D.Double(x, y, r,r);
+        g2.fill(ellipse2D);
+
+    }
+
+    public void drawCenteredCircle(Graphics2D g, double x, double y, double r) {
+        x = x-(r/2);
+        y = y-(r/2);
+        Ellipse2D ellipse2D = new Ellipse2D.Double(x, y, r,r);
+        g.draw(ellipse2D);
     }
 
     public static void main(String[] args) {
