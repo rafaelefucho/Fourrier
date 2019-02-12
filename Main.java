@@ -6,14 +6,18 @@ import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Random;
 
 public class Main extends JComponent implements Runnable {
 
-    static int HeightPanel = 360 * 2;
-    static int WidthPanel = 360 * 2;
+    static int HeightPanel = 360 * 3;
+    static int WidthPanel = 360 * 3;
     double time = Math.PI;
     ArrayList<Point2D> wave;
     ArrayList<ResultImaginary> fourierX;
@@ -56,7 +60,7 @@ public class Main extends JComponent implements Runnable {
         double dt = 2*Math.PI/fourierY.size();
         time += dt;
 
-        if (time > 3*Math.PI) {
+        if (time > 3.1*Math.PI) {
 //            wave.remove(wave.size() - 1);
             wave.clear();
             time = Math.PI;
@@ -64,23 +68,64 @@ public class Main extends JComponent implements Runnable {
     }
     public Main() {
         wave = new ArrayList<>();
-        wave = new ArrayList<>();
-
         ArrayList<Double> yImage = new ArrayList<>();
         ArrayList<Double> xImage = new ArrayList<>();
 
 
-        for (int i = 0; i<100;i++){
-            double angle = mapP5(i, 0d,100d,0,Math.PI*2);
-            Random random = new Random();
+        BufferedReader br = null;
+        try {
+            br = new BufferedReader(new FileReader("drawing.txt"));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        try {
+            StringBuilder sb = new StringBuilder();
+            String line = br.readLine();
 
-            xImage.add(100 * Math.cos(angle));
+
+            while (line != null) {
+                String[] tokens = line.split(",");
+                double xParse = Double.parseDouble(tokens[0]) * 1;
+                double yParse = Double.parseDouble(tokens[1]) * 1;
+                xImage.add(xParse);
+                yImage.add(yParse);
+
+
+
+//                for (String temp:tokens){
+//                    String[] numbers = temp.split(" ");
+//                    double xParse = Double.parseDouble(numbers[0]) * 5;
+//                    double yParse = Double.parseDouble(numbers[1]) * 5;
+//                    xImage.add(xParse);
+//                    yImage.add(yParse);
+//                }
+                sb.append(line);
+                sb.append(System.lineSeparator());
+                line = br.readLine();
+            }
+            String everything = sb.toString();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                br.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
-        for (int i = 0; i<100;i++){
-            double angle = mapP5(i, 0d,100d,0,Math.PI*2);
-            yImage.add(100 * Math.sin(angle));
-        }
+//        xImage.clear();
+//        yImage.clear();
+//
+//        for (int i = 0; i<100 * 1;i++){
+//            double angle = mapP5(i, 0d,100d,0,Math.PI*2);
+//            xImage.add(100 * Math.cos(angle));
+//        }
+//
+//        for (int i = 0; i<100 * 1;i++){
+//            double angle = mapP5(i, 0d,100d,0,Math.PI*2);
+//            yImage.add(100 * (Math.sin(angle)));
+//        }
 
         fourierX = dft(xImage);
         fourierY = dft(yImage);
@@ -129,28 +174,32 @@ public class Main extends JComponent implements Runnable {
     }
 
     private Point2D.Double epiCycles(Graphics2D g2, double X, double Y, double rotation, ArrayList<ResultImaginary> fourier) {
+
         double x = X;
         double y = Y;
 
         for (int i = 0; i < fourier.size(); i ++) {
 
+
+            double prevX = x;
+            double prevY = y;
             double radius = fourier.get(i).amp;
             double freq = fourier.get(i).freq;
             double phase = fourier.get(i).phase;
 
-            g2.setStroke(new BasicStroke(1 / 2));
-            drawCenteredCircle(g2, x, y, radius);
-
-            double xC = x;
-            double yC = y;
-
             x += radius  * (Math.cos(freq * time + phase + rotation));
             y += radius  * (Math.sin(freq * time + phase + rotation));
 
-            g2.setStroke(new BasicStroke(1));
-            Line2D line2D = new Line2D.Double(xC, yC, x, y);
-            g2.draw(line2D);
+            g2.setStroke(new BasicStroke(1 / 2));
+            drawCenteredCircle(g2, prevX, prevY, radius*2);
 
+            drawPoint(g2, x, y);
+
+
+
+            g2.setStroke(new BasicStroke(2));
+            Line2D line2D = new Line2D.Double(prevX, prevY, x, y);
+            g2.draw(line2D);
         }
 
         drawPoint(g2, x, y);
